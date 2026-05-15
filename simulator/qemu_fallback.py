@@ -4,6 +4,7 @@ FieldForge — QEMU Simulator (Primary)
 Runs compiled ARM firmware in QEMU ARM emulator.
 Captures UART output and verifies expected signals.
 """
+from __future__ import annotations
 
 import logging
 import re

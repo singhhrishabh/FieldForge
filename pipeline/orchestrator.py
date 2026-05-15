@@ -4,6 +4,7 @@ FieldForge — Pipeline Orchestrator
 Coordinates all agents and tools: image → architect → compiler →
 critic → recompile → simulator → scorer → final report.
 """
+from __future__ import annotations
 
 import logging
 import time

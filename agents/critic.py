@@ -4,6 +4,7 @@ FieldForge — Critic Agent
 Gemma 4 code review agent that checks firmware for pointer safety,
 buffer bounds, null dereferences, and embedded-specific bugs.
 """
+from __future__ import annotations
 
 import json
 import logging

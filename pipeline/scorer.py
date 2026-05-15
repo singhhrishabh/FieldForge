@@ -4,6 +4,7 @@ FieldForge — Resource Scorer
 Converts GCC output metrics into human-readable efficiency grades.
 This is the project's real "reward function" — all numbers come from GCC.
 """
+from __future__ import annotations
 
 import logging
 from typing import Optional

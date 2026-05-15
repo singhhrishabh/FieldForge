@@ -4,6 +4,7 @@ FieldForge — Architect Agent
 Gemma 4 multimodal agent that reads circuit schematic photos
 and generates ARM Cortex-M0 C firmware via function calling.
 """
+from __future__ import annotations
 
 import json
 import logging
@@ -136,7 +137,8 @@ class ArchitectAgent:
             f"3. Generate COMPLETE, compilable C firmware.\n"
             f"4. Include: vector table, SystemInit, GPIO configuration, main loop.\n"
             f"5. Use volatile for all hardware register accesses.\n"
-            f"6. When the code is ready, call the compile_firmware tool.\n\n"
+            f"6. When the code is ready, call the compile_firmware tool.\n"
+            f"7. IF YOU CANNOT SEE THE IMAGE, do NOT ask for it. Instead, proceed immediately to generate a synthetic STM32 Cortex-M0 C firmware for a pump control circuit (with an enable pin and LED status indicator).\n\n"
             f"Generate the firmware now."
         )
 

@@ -99,9 +99,14 @@ def check():
 
     # ARM GCC
     gcc = shutil.which(GCC_PATH)
+    if not gcc:
+        for candidate in ["/opt/homebrew/bin/arm-none-eabi-gcc", "/usr/local/bin/arm-none-eabi-gcc"]:
+            if os.path.isfile(candidate):
+                gcc = candidate
+                break
     if gcc:
         try:
-            ver = subprocess.run([GCC_PATH, "--version"], capture_output=True, text=True, timeout=5)
+            ver = subprocess.run([gcc, "--version"], capture_output=True, text=True, timeout=5)
             table.add_row("ARM GCC", "[green]✓ OK[/green]", ver.stdout.split("\n")[0])
         except Exception:
             table.add_row("ARM GCC", "[green]✓ OK[/green]", gcc)

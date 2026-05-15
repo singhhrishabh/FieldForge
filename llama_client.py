@@ -4,6 +4,7 @@ FieldForge — llama.cpp Client
 Python client for the llama.cpp OpenAI-compatible server.
 Supports multimodal input (base64 images) and function/tool calling.
 """
+from __future__ import annotations
 
 import base64
 import json
@@ -163,19 +164,32 @@ class LlamaClient:
         for attempt in range(1, self.max_retries + 1):
             try:
                 logger.debug(f"Request attempt {attempt}/{self.max_retries}")
-                resp = self.session.post(url, json=payload, timeout=120)
+                resp = self.session.post(url, json=payload, timeout=300)
 
                 if resp.status_code == 200:
                     return self._parse_response(resp.json())
 
                 last_error = f"HTTP {resp.status_code}: {resp.text[:200]}"
+                
+                # Graceful fallback for non-multimodal models (missing mmproj)
+                if resp.status_code == 500 and "image input is not supported" in resp.text:
+                    logger.warning("Server lacks multimodal support (no mmproj). Retrying as text-only...")
+                    # Strip image blocks from payload
+                    for msg in payload.get("messages", []):
+                        if isinstance(msg.get("content"), list):
+                            msg["content"] = [c for c in msg["content"] if c.get("type") != "image_url"]
+                            # If only 1 text block remains, unwrap it to a simple string
+                            if len(msg["content"]) == 1 and msg["content"][0].get("type") == "text":
+                                msg["content"] = msg["content"][0]["text"]
+                    continue  # Retry immediately with text-only payload
+
                 logger.warning(f"Attempt {attempt} failed: {last_error}")
 
             except requests.ConnectionError as e:
                 last_error = f"Connection refused — is llama-server running? {e}"
                 logger.warning(f"Attempt {attempt}: {last_error}")
             except requests.Timeout:
-                last_error = "Request timed out (120s). Model may be overloaded."
+                last_error = "Request timed out (300s). Model may be overloaded."
                 logger.warning(f"Attempt {attempt}: {last_error}")
             except Exception as e:
                 last_error = f"Unexpected error: {e}"

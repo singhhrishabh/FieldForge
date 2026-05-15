@@ -13,6 +13,8 @@ GREEN='\033[0;32m'; RED='\033[0;31m'; CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\03
 # Find llama-server binary
 find_server() {
     if command -v llama-server &>/dev/null; then echo "llama-server"; return; fi
+    if [ -f "/opt/homebrew/bin/llama-server" ]; then echo "/opt/homebrew/bin/llama-server"; return; fi
+    if [ -f "/usr/local/bin/llama-server" ]; then echo "/usr/local/bin/llama-server"; return; fi
     if [ -f "$SCRIPT_DIR/llama.cpp/build/bin/llama-server" ]; then
         echo "$SCRIPT_DIR/llama.cpp/build/bin/llama-server"; return
     fi
@@ -41,9 +43,18 @@ echo -e "  Context: $CTX_LENGTH tokens"
 echo -e "  GPU:     $GPU_LAYERS layers"
 echo -e "  Port:    $PORT"
 
+# Check for mmproj model
+MMPROJ_PATH="$HOME/models/gemma-4-E4B-it-mmproj.gguf"
+MMPROJ_ARG=""
+if [ -f "$MMPROJ_PATH" ]; then
+    echo -e "  Vision:  $(basename "$MMPROJ_PATH")"
+    MMPROJ_ARG="--mmproj $MMPROJ_PATH"
+fi
+
 # Start server in background
 "$SERVER_BIN" \
     -m "$MODEL_PATH" \
+    $MMPROJ_ARG \
     -c "$CTX_LENGTH" \
     -ngl "$GPU_LAYERS" \
     --port "$PORT" \

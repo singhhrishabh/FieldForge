@@ -4,6 +4,7 @@ FieldForge — Tool Registry
 Function calling tools for Gemma 4 agents.
 Maps tool names to actual system operations (GCC, simulator, file I/O).
 """
+from __future__ import annotations
 
 import json
 import logging

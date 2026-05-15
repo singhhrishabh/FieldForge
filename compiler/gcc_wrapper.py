@@ -4,6 +4,7 @@ FieldForge — GCC Compiler Wrapper
 Interface to arm-none-eabi-gcc for compiling Gemma 4-generated C code
 to ARM Cortex-M0 firmware. Extracts resource metrics for scoring.
 """
+from __future__ import annotations
 
 import logging
 import os
@@ -77,10 +78,29 @@ class GCCWrapper:
         output_dir: str = None,
         linker_script: str = None,
     ):
-        self.gcc_path = gcc_path or GCC_PATH
+        self.gcc_path = gcc_path or self._find_gcc()
         self.output_dir = Path(output_dir or OUTPUT_DIR)
         self.linker_script = linker_script or LINKER_SCRIPT
         self.output_dir.mkdir(parents=True, exist_ok=True)
+
+    @staticmethod
+    def _find_gcc() -> str:
+        """Auto-discover arm-none-eabi-gcc from known paths."""
+        import shutil
+        candidates = [
+            GCC_PATH,
+            "/opt/homebrew/bin/arm-none-eabi-gcc",
+            "/usr/local/bin/arm-none-eabi-gcc",
+        ]
+        for path in candidates:
+            if shutil.which(path) or os.path.isfile(path):
+                return path
+        return GCC_PATH  # Fallback to config default
+
+    def _tool_path(self, tool: str) -> str:
+        """Derive sibling tool path from gcc_path (e.g. arm-none-eabi-size)."""
+        prefix = self.gcc_path.replace("arm-none-eabi-gcc", "")
+        return prefix + tool
 
     def is_available(self) -> bool:
         """Check if the ARM GCC toolchain is installed."""
@@ -217,7 +237,7 @@ class GCCWrapper:
         # --- Section sizes via arm-none-eabi-size ---
         try:
             result = subprocess.run(
-                [GCC_SIZE_PATH, elf_path],
+                [self._tool_path("arm-none-eabi-size"), elf_path],
                 capture_output=True, text=True, timeout=10,
             )
             if result.returncode == 0:
@@ -235,7 +255,7 @@ class GCCWrapper:
         # --- Instruction count + stack via objdump ---
         try:
             result = subprocess.run(
-                [GCC_OBJDUMP_PATH, "-d", elf_path],
+                [self._tool_path("arm-none-eabi-objdump"), "-d", elf_path],
                 capture_output=True, text=True, timeout=10,
             )
             if result.returncode == 0:

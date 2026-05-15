@@ -10,6 +10,7 @@ MODEL_DIR="$SCRIPT_DIR/models"
 LLAMA_DIR="$SCRIPT_DIR/llama.cpp"
 MODEL_DIR="$HOME/models"
 MODEL_NAME="gemma-4-E4B-it-Q4_K_M.gguf"
+MMPROJ_NAME="gemma-4-E4B-it-mmproj.gguf"
 
 log_step() { echo -e "\n${BLUE}${BOLD}[STEP]${NC} $1"; }
 log_ok()   { echo -e "  ${GREEN}✓${NC} $1"; }
@@ -59,8 +60,8 @@ install_gcc_arm() {
 
 install_llama_cpp() {
     log_step "Setting up llama.cpp..."
-    if command -v llama-server &>/dev/null; then
-        log_ok "llama-server already in PATH"; return 0
+    if command -v llama-server &>/dev/null || [ -f "/opt/homebrew/bin/llama-server" ] || [ -f "/usr/local/bin/llama-server" ]; then
+        log_ok "llama-server already installed"; return 0
     fi
     if [ -f "$LLAMA_DIR/build/bin/llama-server" ]; then
         log_ok "llama.cpp already built"; return 0
@@ -80,23 +81,42 @@ install_llama_cpp() {
 }
 
 download_model() {
-    log_step "Checking Gemma 4 E4B model..."
+    log_step "Checking Gemma 4 E4B models..."
     mkdir -p "$MODEL_DIR"
+    
+    # Download main model
     if [ -f "$MODEL_DIR/$MODEL_NAME" ]; then
-        log_ok "Model present: $(du -h "$MODEL_DIR/$MODEL_NAME" | cut -f1)"; return 0
-    fi
-    log_info "Downloading Gemma 4 E4B Q4_K_M..."
-    local HF_URL="https://huggingface.co/unsloth/gemma-4-E4B-it-GGUF/resolve/main/$MODEL_NAME"
-    if command -v huggingface-cli &>/dev/null; then
-        huggingface-cli download "unsloth/gemma-4-E4B-it-GGUF" "$MODEL_NAME" --local-dir "$MODEL_DIR"
-    elif command -v curl &>/dev/null; then
-        curl -L -C - --progress-bar -o "$MODEL_DIR/$MODEL_NAME" "$HF_URL"
-    elif command -v wget &>/dev/null; then
-        wget -c --progress=bar:force -O "$MODEL_DIR/$MODEL_NAME" "$HF_URL"
+        log_ok "Main model present: $(du -h "$MODEL_DIR/$MODEL_NAME" | cut -f1)"
     else
-        log_err "No download tool found. Download manually: $HF_URL"; return 1
+        log_info "Downloading Gemma 4 E4B Q4_K_M..."
+        local HF_URL="https://huggingface.co/unsloth/gemma-4-E4B-it-GGUF/resolve/main/$MODEL_NAME"
+        if command -v huggingface-cli &>/dev/null; then
+            huggingface-cli download "unsloth/gemma-4-E4B-it-GGUF" "$MODEL_NAME" --local-dir "$MODEL_DIR"
+        elif command -v curl &>/dev/null; then
+            curl -L -C - --progress-bar -o "$MODEL_DIR/$MODEL_NAME" "$HF_URL"
+        elif command -v wget &>/dev/null; then
+            wget -c --progress=bar:force -O "$MODEL_DIR/$MODEL_NAME" "$HF_URL"
+        else
+            log_err "No download tool found. Download manually: $HF_URL"; return 1
+        fi
+        [ -f "$MODEL_DIR/$MODEL_NAME" ] && log_ok "Main model downloaded" || log_err "Main model download failed"
     fi
-    [ -f "$MODEL_DIR/$MODEL_NAME" ] && log_ok "Model downloaded" || log_err "Download failed"
+
+    # Download mmproj model
+    if [ -f "$MODEL_DIR/$MMPROJ_NAME" ]; then
+        log_ok "Vision model present: $(du -h "$MODEL_DIR/$MMPROJ_NAME" | cut -f1)"
+    else
+        log_info "Downloading Gemma 4 E4B Vision Adapter (mmproj)..."
+        local MMPROJ_URL="https://huggingface.co/unsloth/gemma-4-E4B-it-GGUF/resolve/main/$MMPROJ_NAME"
+        if command -v huggingface-cli &>/dev/null; then
+            huggingface-cli download "unsloth/gemma-4-E4B-it-GGUF" "$MMPROJ_NAME" --local-dir "$MODEL_DIR"
+        elif command -v curl &>/dev/null; then
+            curl -L -C - --progress-bar -o "$MODEL_DIR/$MMPROJ_NAME" "$MMPROJ_URL"
+        elif command -v wget &>/dev/null; then
+            wget -c --progress=bar:force -O "$MODEL_DIR/$MMPROJ_NAME" "$MMPROJ_URL"
+        fi
+        [ -f "$MODEL_DIR/$MMPROJ_NAME" ] && log_ok "Vision model downloaded" || log_err "Vision model download failed"
+    fi
 }
 
 install_qemu() {
@@ -115,8 +135,8 @@ install_qemu() {
 verify_setup() {
     log_step "Final verification..."
     python3 -c "import click, rich, pydantic, cv2, PIL, numpy" 2>/dev/null && log_ok "Python packages OK" || log_warn "Some packages missing"
-    command -v arm-none-eabi-gcc &>/dev/null && log_ok "ARM GCC OK" || log_warn "ARM GCC missing"
-    (command -v llama-server &>/dev/null || [ -f "$LLAMA_DIR/build/bin/llama-server" ]) && log_ok "llama.cpp OK" || log_warn "llama.cpp missing"
+    command -v arm-none-eabi-gcc &>/dev/null || [ -f "/opt/homebrew/bin/arm-none-eabi-gcc" ] && log_ok "ARM GCC OK" || log_warn "ARM GCC missing"
+    (command -v llama-server &>/dev/null || [ -f "/opt/homebrew/bin/llama-server" ] || [ -f "/usr/local/bin/llama-server" ] || [ -f "$LLAMA_DIR/build/bin/llama-server" ]) && log_ok "llama.cpp OK" || log_warn "llama.cpp missing"
     [ -f "$MODEL_DIR/$MODEL_NAME" ] && log_ok "Gemma 4 model OK" || log_warn "Model missing"
     command -v qemu-system-arm &>/dev/null && log_ok "QEMU OK" || log_warn "QEMU missing"
     echo -e "\n${GREEN}${BOLD}Setup complete!${NC} Run ${CYAN}./start_server.sh${NC} then ${CYAN}python -m ui.cli demo${NC}"
