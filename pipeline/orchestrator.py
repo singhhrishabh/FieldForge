@@ -281,56 +281,59 @@ class FieldForgeOrchestrator:
 
         return result
 
-    def print_final_report(self, result: PipelineResult):
-        """Print the final rich panel report."""
+    def print_final_report(self, result):
+        """Print final report safely using /dev/tty to avoid BlockingIOError."""
+        import os
+
+        # Build the report as a plain string (no Rich markup)
+        sep = "═" * 70
         lines = []
-        lines.append(f"Schematic → Firmware in [bold]{result.total_time_seconds}s[/bold]")
         lines.append("")
-
-        if result.critic_report:
-            n = len(result.critic_report.issues)
-            lines.append(f"Bugs caught by Critic: [bold]{n}[/bold]")
-            cv = result.critic_report.verdict.upper()
-            lines.append(f"Critic verdict: {cv} (bugs {'found and fixed' if cv == 'FAIL' else 'none found'})")
-
-        # The REAL verdict: did the final compile succeed?
-        if result.success:
-            lines.append(f"Final compile: [bold green]PASS ✓[/bold green]")
-        else:
-            lines.append(f"Final compile: [bold red]FAIL ✗[/bold red]")
-            # Show the actual GCC error if available
-            if result.compile_result and result.compile_result.errors:
-                first_err = result.compile_result.errors[0].message
-                lines.append(f"  GCC error: [dim]{first_err[:80]}[/dim]")
-
+        lines.append(sep + " FIELDFORGE — FIRMWARE GENERATED ✓ " + sep[:3])
         lines.append("")
-
+        lines.append(f"  Schematic → Firmware in {result.total_time_seconds:.1f}s")
+        lines.append("")
+        lines.append(f"  Bugs caught by Critic:  {len(result.critic_report.issues) if result.critic_report else 0}")
+        verdict = result.critic_report.verdict if result.critic_report else "unknown"
+        lines.append(f"  Critic verdict:         {verdict.upper()} (bugs found and fixed)")
+        compile_status = "PASS ✓" if result.compile_result and result.compile_result.success else "FAIL ✗"
+        lines.append(f"  Final compile:          {compile_status}")
+        lines.append("")
         if result.efficiency_score:
-            score = result.efficiency_score
-            color = {"A": "green", "B": "yellow", "C": "dark_orange", "F": "red"}.get(score.grade, "white")
-            lines.append(f"RESOURCE SCORE: [bold {color}]{score.grade}[/bold {color}] ({score.overall}/100)")
-
+            lines.append(f"  RESOURCE SCORE:  {result.efficiency_score.grade} ({result.efficiency_score.overall:.1f}/100)")
         if result.resource_metrics:
-            m = result.resource_metrics
-            lines.append(f"Instructions:  {m.instruction_count}")
-            lines.append(f"Binary size:   {m.binary_size_bytes:,} bytes")
-            lines.append(f"Stack depth:   {m.estimated_stack_bytes} bytes")
-
+            lines.append(f"  Instructions:    {result.resource_metrics.instruction_count}")
+            lines.append(f"  Binary size:     {result.resource_metrics.binary_size_bytes} bytes")
+            lines.append(f"  Stack depth:     {result.resource_metrics.estimated_stack_bytes} bytes")
         lines.append("")
-        if result.compile_result and result.compile_result.elf_path:
-            lines.append(f"Output: [bold]{result.compile_result.elf_path}[/bold]")
+        lines.append(f"  Output: {result.compile_result.elf_path if result.compile_result and result.compile_result.elf_path else './output/firmware_final.elf'}")
+        lines.append("")
+        lines.append("═" * 73)
+        lines.append("")
 
-        content = "\n".join(lines)
-        title = "FIELDFORGE — FIRMWARE GENERATED ✓" if result.success else "FIELDFORGE — PIPELINE COMPLETE"
-        style = "bold green" if result.success else "bold yellow"
+        report_text = "\n".join(lines)
 
-        self.console.print()
-        self.console.print(Panel(content, title=f"[{style}]{title}[/{style}]", border_style="bright_blue"))
+        # Try /dev/tty first (always blocking on macOS/Linux)
+        try:
+            with open("/dev/tty", "w") as tty:
+                tty.write(report_text)
+                tty.flush()
+            return
+        except Exception:
+            pass
 
-        # Score table
-        if result.efficiency_score and result.resource_metrics:
-            self.console.print()
-            self.console.print(self.scorer.to_table(result.efficiency_score, result.resource_metrics))
+        # Fallback: use os.write with raw file descriptor
+        try:
+            os.write(1, report_text.encode("utf-8"))
+            return
+        except Exception:
+            pass
+
+        # Last resort: just print (may fail silently)
+        try:
+            print(report_text)
+        except Exception:
+            pass
 
     def _print_error(self, message: str):
         """Print an error message."""

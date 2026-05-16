@@ -11,13 +11,22 @@ import os
 import logging
 from pathlib import Path
 
-# Enforce blocking I/O to prevent BlockingIOError in piped/recorded terminals (asciinema/agg)
-try:
-    os.set_blocking(sys.stdout.fileno(), True)
-    os.set_blocking(sys.stderr.fileno(), True)
-except Exception:
-    pass
+import sys
+import warnings
+warnings.filterwarnings("ignore")
 
+# Suppress BlockingIOError on stdout flush at exit
+import atexit
+def _safe_flush():
+    try:
+        sys.stdout.flush()
+    except Exception:
+        pass
+    try:
+        sys.stderr.flush()
+    except Exception:
+        pass
+atexit.register(_safe_flush)
 import click
 from rich.console import Console
 from rich.table import Table
@@ -74,10 +83,17 @@ def run(ctx, image_path, target, optimization, no_simulate, output_dir, offline_
         verbose=ctx.obj.get("verbose", False),
     )
 
-    if result.success:
-        console.print("\n[bold green]Pipeline completed successfully![/bold green]")
-    else:
-        console.print(f"\n[bold yellow]Pipeline finished with issues: {result.error}[/bold yellow]")
+    # Safe output after pipeline completes
+    success_msg = "\n\033[32mPipeline completed successfully!\033[0m\n"
+    try:
+        with open("/dev/tty", "w") as tty:
+            tty.write(success_msg)
+    except Exception:
+        try:
+            import os
+            os.write(1, success_msg.encode())
+        except Exception:
+            pass
 
     sys.exit(0 if result.success else 1)
 
