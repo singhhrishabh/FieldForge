@@ -333,8 +333,11 @@ class FieldForgeOrchestrator:
 
         # Score table
         if result.efficiency_score and result.resource_metrics:
-            self.console.print()
-            self.console.print(self.scorer.to_table(result.efficiency_score, result.resource_metrics))
+            try:
+                self.console.print()
+                self.console.print(self.scorer.to_table(result.efficiency_score, result.resource_metrics))
+            except BlockingIOError:
+                pass
 
     def _print_error(self, message: str):
         """Print an error message."""
