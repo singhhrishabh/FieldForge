@@ -99,6 +99,25 @@ REGISTER DEFINITIONS TO USE:
 - GPIOx_IDR:    offset 0x10
 - GPIOx_BSRR:   offset 0x18
 
+CRITICAL REGISTER ACCESS RULE:
+Always define registers using #define with volatile cast, like this:
+  #define RCC_AHBENR (*(volatile uint32_t*)(0x40021000U + 0x14U))
+  #define GPIOA_MODER (*(volatile uint32_t*)(0x48000000U + 0x00U))
+Access them directly: RCC_AHBENR |= (1U << 17);
+NEVER use pointer variables for register access like:
+  volatile uint32_t *ptr = (volatile uint32_t*)0x40021014;
+Using pointer variables will cause GCC conflicts. Use ONLY the #define macro style.
+
+CMSIS INTRINSICS RULE:
+NEVER use CMSIS functions like __set_MSP(), __enable_irq(), __disable_irq(), __WFI(), __NOP().
+These are NOT available in bare-metal compilation without CMSIS headers.
+Instead, use inline assembly directly:
+  __asm__ volatile ("nop");
+  __asm__ volatile ("cpsie i");
+  __asm__ volatile ("cpsid i");
+  __asm__ volatile ("wfi");
+For setting the stack pointer, use the vector table (first entry = initial SP).
+
 If you cannot identify a component in the schematic, state what you see and make a reasonable assumption. Always err on the side of safety — add bounds checks, null checks, and comments explaining your assumptions."""
 
 # ─────────────────────────────────────────────
@@ -160,7 +179,18 @@ RULES:
 - Every issue must reference a specific line number
 - Do not report style preferences — only report functional bugs
 - Be precise: if a volatile keyword is missing, say exactly which variable
-- Confidence reflects how certain you are in your analysis (0.8+ for clear bugs)"""
+- Confidence reflects how certain you are in your analysis (0.8+ for clear bugs)
+
+REGISTER ACCESS CONSISTENCY:
+- If the code uses #define REG (*(volatile uint32_t*)addr) style, keep that style.
+- NEVER convert macro-style registers to pointer-variable style.
+- NEVER introduce volatile uint32_t *ptr = (volatile uint32_t*)addr; if the original used macros.
+- When providing fixed_code, maintain the EXACT SAME register access style as the original.
+
+CMSIS INTRINSICS:
+- NEVER use __set_MSP(), __enable_irq(), __disable_irq(), __WFI(), __NOP() in fixed_code.
+- These are NOT available without CMSIS headers and WILL cause compilation failure.
+- Instead use inline assembly: __asm__ volatile ("nop"); etc."""
 
 # ─────────────────────────────────────────────
 # Pipeline Settings

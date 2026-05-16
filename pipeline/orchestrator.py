@@ -289,9 +289,19 @@ class FieldForgeOrchestrator:
         if result.critic_report:
             n = len(result.critic_report.issues)
             lines.append(f"Bugs caught by Critic: [bold]{n}[/bold]")
-            v = result.critic_report.verdict.upper()
-            color = "green" if v == "PASS" else "red"
-            lines.append(f"Final verdict: [bold {color}]{v}[/bold {color}]")
+            cv = result.critic_report.verdict.upper()
+            lines.append(f"Critic verdict: {cv} (bugs {'found and fixed' if cv == 'FAIL' else 'none found'})")
+
+        # The REAL verdict: did the final compile succeed?
+        if result.success:
+            lines.append(f"Final compile: [bold green]PASS ✓[/bold green]")
+        else:
+            lines.append(f"Final compile: [bold red]FAIL ✗[/bold red]")
+            # Show the actual GCC error if available
+            if result.compile_result and result.compile_result.errors:
+                first_err = result.compile_result.errors[0].message
+                lines.append(f"  GCC error: [dim]{first_err[:80]}[/dim]")
+
         lines.append("")
 
         if result.efficiency_score:
