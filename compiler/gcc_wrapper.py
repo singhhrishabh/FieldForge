@@ -102,6 +102,63 @@ class GCCWrapper:
         prefix = self.gcc_path.replace("arm-none-eabi-gcc", "")
         return prefix + tool
 
+    def _sanitize_code(self, code: str) -> str:
+        """Fix common AI-generated C/ARM assembly errors that prevent compilation."""
+        import re
+        
+        # Add missing CMSIS-like intrinsic stubs at the top if used
+        cmsis_stubs = []
+        if "__set_MSP" in code and "static inline void __set_MSP" not in code:
+            cmsis_stubs.append(
+                'static inline void __set_MSP(uint32_t topOfMainStack) '
+                '{ __asm__ volatile ("MSR msp, %0" : : "r" (topOfMainStack)); }\n'
+            )
+        if "__enable_irq" in code and "static inline void __enable_irq" not in code:
+            cmsis_stubs.append(
+                'static inline void __enable_irq(void) '
+                '{ __asm__ volatile ("cpsie i"); }\n'
+            )
+        if "__disable_irq" in code and "static inline void __disable_irq" not in code:
+            cmsis_stubs.append(
+                'static inline void __disable_irq(void) '
+                '{ __asm__ volatile ("cpsid i"); }\n'
+            )
+        if "__WFI" in code and "static inline void __WFI" not in code:
+            cmsis_stubs.append(
+                'static inline void __WFI(void) '
+                '{ __asm__ volatile ("wfi"); }\n'
+            )
+        if "__NOP" in code and "static inline void __NOP" not in code:
+            cmsis_stubs.append(
+                'static inline void __NOP(void) '
+                '{ __asm__ volatile ("nop"); }\n'
+            )
+        
+        if cmsis_stubs:
+            # Insert stubs after the first #include or #define block, or at top
+            insert_pos = 0
+            for i, line in enumerate(code.split("\n")):
+                if line.startswith("#include") or line.startswith("#define"):
+                    insert_pos = i + 1
+            lines = code.split("\n")
+            for stub in reversed(cmsis_stubs):
+                lines.insert(insert_pos, stub)
+            code = "\n".join(lines)
+        
+        lines = code.split("\n")
+        sanitized = []
+        for line in lines:
+            # Fix: LDR SP, =array[index] → LDR SP, =_estack (invalid ARM asm)
+            if re.search(r'__asm__.*LDR\s+SP\s*,\s*=\s*\w+\[', line):
+                line = '    __asm__ volatile ("LDR SP, =_estack");'
+            # Fix: LDR register, =symbol[N] → LDR register, =symbol
+            line = re.sub(r'(=\s*\w+)\[\d+\]', r'\1', line)
+            # Fix: naked inline asm without __asm__ wrapper
+            if re.search(r'^\s*"(LDR|MOV|STR|BX|BL|NOP)', line) and '__asm__' not in line:
+                line = f'    __asm__ volatile ({line.strip()});'
+            sanitized.append(line)
+        return "\n".join(sanitized)
+
     def is_available(self) -> bool:
         """Check if the ARM GCC toolchain is installed."""
         try:
@@ -151,6 +208,9 @@ class GCCWrapper:
                     severity="error",
                 )],
             )
+
+        # Sanitize AI-generated code (fix common ARM assembly mistakes)
+        code = self._sanitize_code(code)
 
         # Write source to temp file
         src_path = self.output_dir / f"{filename}.c"
