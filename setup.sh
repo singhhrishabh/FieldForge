@@ -10,7 +10,7 @@ MODEL_DIR="$SCRIPT_DIR/models"
 LLAMA_DIR="$SCRIPT_DIR/llama.cpp"
 MODEL_DIR="$HOME/models"
 MODEL_NAME="gemma-4-E4B-it-Q4_K_M.gguf"
-MMPROJ_NAME="gemma-4-E4B-it-mmproj.gguf"
+MMPROJ_NAME="mmproj-BF16.gguf"
 
 log_step() { echo -e "\n${BLUE}${BOLD}[STEP]${NC} $1"; }
 log_ok()   { echo -e "  ${GREEN}✓${NC} $1"; }
