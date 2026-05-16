@@ -24,7 +24,7 @@ from config import (
     MODEL_PATH, OUTPUT_DIR,
 )
 
-console = Console()
+console = Console(force_terminal=True, soft_wrap=True, highlight=False)
 
 
 @click.group()
@@ -72,8 +72,11 @@ def run(ctx, image_path, target, optimization, no_simulate, output_dir, offline_
             console.print("\n[bold green]Pipeline completed successfully![/bold green]")
         else:
             console.print(f"\n[bold yellow]Pipeline finished with issues: {result.error}[/bold yellow]")
-    except BlockingIOError:
-        pass
+    except Exception:
+        if result.success:
+            print("\nPipeline completed successfully!")
+        else:
+            print(f"\nPipeline finished with issues: {result.error}")
 
     sys.exit(0 if result.success else 1)
 

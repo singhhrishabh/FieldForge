@@ -62,7 +62,7 @@ class FieldForgeOrchestrator:
     """
 
     def __init__(self):
-        self.console = Console()
+        self.console = Console(force_terminal=True, soft_wrap=True, highlight=False)
         self.client = LlamaClient()
         self.image_processor = ImageProcessor()
         self.architect = ArchitectAgent(self.client)
