@@ -40,24 +40,23 @@ FieldForge is a five-component pipeline, each grounded in real toolchain operati
 
 ## Technical Execution Evidence
 
-In our benchmark test using a pump control schematic (MCU with enable switch, MOSFET driver, status LED):
+In our benchmark test using a digital input conditioning circuit (12V signal → voltage divider → Zener clamp → MCU):
 
-The Architect generated 179 lines of C firmware after analyzing the hand-drawn schematic through Gemma 4's multimodal vision. It correctly identified GPIO pins, the pump control MOSFET, enable switch, and status LED, mapping them to an STM32F030 Cortex-M0 register layout.
+The Architect generated **134 lines of C firmware** after analyzing the schematic through Gemma 4's multimodal vision. It correctly identified the `AUX_DIGITAL_IN` signal path, the voltage divider (R34 10kΩ / R33 2.9kΩ) scaling 12V to MCU-safe levels, Zener clamp D8 (BZT52C3V6-TP) for overvoltage protection, and the decoupling capacitors, mapping them to GPIO input configuration on an STM32F030 Cortex-M0.
 
-The Critic identified five genuine bugs across two severity tiers:
-- **Line 142 (Category A5, Critical):** Invalid inline assembly attempting to set the stack pointer with a preprocessor macro concatenation — would cause an assembler error on any ARM target.
-- **Line 106 (Category B3, High):** GPIO output set via ODR instead of BSRR — non-atomic operation risks glitching adjacent pins during concurrent interrupt access.
-- **Line 111 (Category B3, High):** Clearing a bit via ODR AND-mask instead of using the BSRR reset half — same non-atomic race condition.
-- **Line 113 (Category B3, High):** Same ODR-based clear on the status LED pin — would silently glitch the pump control output.
-- **Line 155 (Category C1, Medium):** Blocking delay in main loop — flagged as poor practice for real-time systems.
+The Critic identified **four genuine bugs** at **95% confidence** across three severity tiers:
+- **Line 42 (Category B3, High):** GPIO clock for GPIOA not enabled before accessing GPIO registers. On real hardware: GPIO pins would be dead — no output at all.
+- **Line 70 (Category C2, Medium):** `Delay_ms` uses a busy-wait loop — acceptable but blocks CPU entirely. No interrupts can fire during delay.
+- **Line 74 (Category B4, High):** Loop counter calculation `ms * 1000` overflows `uint16_t` if `ms > 65`. On real hardware: random incorrect delays, corrupted timing.
+- **Line 133 (Category A2, Critical):** `Reset_Handler` calls `main()` directly with no infinite loop after. If `main()` returns: CPU executes random memory as code → immediate hardfault. This is why QEMU showed a FAULT signal on the unpatched code.
 
-After the Critic's fixes were applied, the firmware compiled successfully and passed QEMU simulation:
-- **Instructions:** 93
-- **Binary size:** 256 bytes
-- **Stack depth:** 264 bytes
+After the Critic's fixes were applied, the firmware compiled successfully and passed QEMU simulation with signal `RUNNING`:
+- **Instructions:** 79
+- **Binary size:** 180 bytes
+- **Stack depth:** 280 bytes
 - **Efficiency Grade:** A (96.4/100)
 
-Gemma 4 E4B runs at approximately 52 tokens/second on an M4 Pro MacBook via llama.cpp with Q4_K_M quantization and mmproj-BF16 vision adapter. Total pipeline time: 211 seconds (3 minutes 31 seconds). All tests conducted with WiFi disabled — zero external API calls. The llama.cpp server logs confirm every token was generated locally, with prompt evaluation reaching 570 tokens/second.
+Gemma 4 E4B runs at approximately 18 tokens/second on an M2 MacBook Air via llama.cpp with Q4_K_M quantization and mmproj-BF16 vision adapter. Total pipeline time: **125.8 seconds (2 minutes 6 seconds)**. All tests conducted with WiFi disabled — zero external API calls. The llama.cpp server logs confirm every token was generated locally.
 
 ## Impact & Future
 
