@@ -90,23 +90,28 @@ OUTPUT FORMAT:
 When you have generated the complete firmware, call the compile_firmware tool with the full C source code. Do NOT output partial code — always provide the complete, self-contained .c file including all #includes, register definitions, and the vector table.
 
 REGISTER DEFINITIONS TO USE:
-- RCC_BASE:     0x40021000
-- GPIOA_BASE:   0x48000000
-- GPIOB_BASE:   0x48000400
-- RCC_AHBENR:   *(volatile uint32_t*)(RCC_BASE + 0x14)
-- GPIOx_MODER:  offset 0x00
-- GPIOx_ODR:    offset 0x14
-- GPIOx_IDR:    offset 0x10
-- GPIOx_BSRR:   offset 0x18
+ALWAYS define a reg() helper at the top of your code, then use #define for each register:
 
-CRITICAL REGISTER ACCESS RULE:
-Always define registers using #define with volatile cast, like this:
-  #define RCC_AHBENR (*(volatile uint32_t*)(0x40021000U + 0x14U))
-  #define GPIOA_MODER (*(volatile uint32_t*)(0x48000000U + 0x00U))
-Access them directly: RCC_AHBENR |= (1U << 17);
-NEVER use pointer variables for register access like:
+  static inline volatile uint32_t* reg(uint32_t addr) {
+      return (volatile uint32_t*)addr;
+  }
+
+  #define RCC_BASE      0x40021000UL
+  #define GPIOA_BASE    0x48000000UL
+  #define GPIOB_BASE    0x48000400UL
+
+  #define RCC_AHBENR    reg(RCC_BASE   + 0x14U)
+  #define GPIOA_MODER   reg(GPIOA_BASE + 0x00U)
+  #define GPIOA_ODR     reg(GPIOA_BASE + 0x14U)
+  #define GPIOA_IDR     reg(GPIOA_BASE + 0x10U)
+  #define GPIOA_BSRR    reg(GPIOA_BASE + 0x18U)
+
+Access registers ALWAYS via dereference: *RCC_AHBENR |= (1U << 17);
+
+NEVER use this style (causes GCC conflicts):
+  #define RCC_AHBENR (*(volatile uint32_t*)0x40021014)
+NEVER use pointer variables:
   volatile uint32_t *ptr = (volatile uint32_t*)0x40021014;
-Using pointer variables will cause GCC conflicts. Use ONLY the #define macro style.
 
 CMSIS INTRINSICS RULE:
 NEVER use CMSIS functions like __set_MSP(), __enable_irq(), __disable_irq(), __WFI(), __NOP().
@@ -117,6 +122,7 @@ Instead, use inline assembly directly:
   __asm__ volatile ("cpsid i");
   __asm__ volatile ("wfi");
 For setting the stack pointer, use the vector table (first entry = initial SP).
+NEVER set SP manually with mov or ldr instructions in inline assembly.
 
 If you cannot identify a component in the schematic, state what you see and make a reasonable assumption. Always err on the side of safety — add bounds checks, null checks, and comments explaining your assumptions."""
 
@@ -182,15 +188,18 @@ RULES:
 - Confidence reflects how certain you are in your analysis (0.8+ for clear bugs)
 
 REGISTER ACCESS CONSISTENCY:
+- NEVER change the register access style used in the original code.
+- If the code uses reg() helper functions, keep that style.
 - If the code uses #define REG (*(volatile uint32_t*)addr) style, keep that style.
-- NEVER convert macro-style registers to pointer-variable style.
-- NEVER introduce volatile uint32_t *ptr = (volatile uint32_t*)addr; if the original used macros.
-- When providing fixed_code, maintain the EXACT SAME register access style as the original.
+- NEVER convert one style to another — mixing styles causes GCC "conflicting types" errors.
+- Only check logic correctness, not register definition syntax.
+- When providing fixed_code, maintain the EXACT SAME register access pattern as the original.
 
 CMSIS INTRINSICS:
 - NEVER use __set_MSP(), __enable_irq(), __disable_irq(), __WFI(), __NOP() in fixed_code.
 - These are NOT available without CMSIS headers and WILL cause compilation failure.
-- Instead use inline assembly: __asm__ volatile ("nop"); etc."""
+- Instead use inline assembly: __asm__ volatile ("nop"); etc.
+- NEVER set the stack pointer manually with mov/ldr asm — it is set by the vector table."""
 
 # ─────────────────────────────────────────────
 # Pipeline Settings

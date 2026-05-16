@@ -17,24 +17,42 @@
 
 #include <stdint.h>
 
+/* ─── Register Access Helper ─────────────────────── */
+/*
+ * All hardware register access goes through reg().
+ * This avoids conflicts between macro-style and pointer-style.
+ * Usage: *REG_NAME |= value;  (always dereference with *)
+ */
+static inline volatile uint32_t* reg(uint32_t addr) {
+    return (volatile uint32_t*)addr;
+}
+
 /* ─── Register Base Addresses ─────────────────────── */
-#define RCC_BASE        0x40021000U
-#define GPIOA_BASE      0x48000000U
-#define GPIOB_BASE      0x48000400U
+#define RCC_BASE        0x40021000UL
+#define GPIOA_BASE      0x48000000UL
+#define GPIOB_BASE      0x48000400UL
 
 /* ─── RCC Registers ───────────────────────────────── */
-#define RCC_AHBENR      (*(volatile uint32_t *)(RCC_BASE + 0x14U))
+#define RCC_AHBENR      reg(RCC_BASE   + 0x14U)
 #define RCC_AHBENR_IOPAEN  (1U << 17)  /* GPIOA clock enable */
 #define RCC_AHBENR_IOPBEN  (1U << 18)  /* GPIOB clock enable */
 
-/* ─── GPIO Register Offsets ───────────────────────── */
-#define GPIO_MODER(base)   (*(volatile uint32_t *)((base) + 0x00U))
-#define GPIO_OTYPER(base)  (*(volatile uint32_t *)((base) + 0x04U))
-#define GPIO_OSPEEDR(base) (*(volatile uint32_t *)((base) + 0x08U))
-#define GPIO_PUPDR(base)   (*(volatile uint32_t *)((base) + 0x0CU))
-#define GPIO_IDR(base)     (*(volatile uint32_t *)((base) + 0x10U))
-#define GPIO_ODR(base)     (*(volatile uint32_t *)((base) + 0x14U))
-#define GPIO_BSRR(base)    (*(volatile uint32_t *)((base) + 0x18U))
+/* ─── GPIO Registers ─────────────────────────────── */
+#define GPIOA_MODER     reg(GPIOA_BASE + 0x00U)
+#define GPIOA_OTYPER    reg(GPIOA_BASE + 0x04U)
+#define GPIOA_OSPEEDR   reg(GPIOA_BASE + 0x08U)
+#define GPIOA_PUPDR     reg(GPIOA_BASE + 0x0CU)
+#define GPIOA_IDR       reg(GPIOA_BASE + 0x10U)
+#define GPIOA_ODR       reg(GPIOA_BASE + 0x14U)
+#define GPIOA_BSRR      reg(GPIOA_BASE + 0x18U)
+
+#define GPIOB_MODER     reg(GPIOB_BASE + 0x00U)
+#define GPIOB_OTYPER    reg(GPIOB_BASE + 0x04U)
+#define GPIOB_OSPEEDR   reg(GPIOB_BASE + 0x08U)
+#define GPIOB_PUPDR     reg(GPIOB_BASE + 0x0CU)
+#define GPIOB_IDR       reg(GPIOB_BASE + 0x10U)
+#define GPIOB_ODR       reg(GPIOB_BASE + 0x14U)
+#define GPIOB_BSRR      reg(GPIOB_BASE + 0x18U)
 
 /* ─── GPIO Mode Constants ─────────────────────────── */
 #define GPIO_MODE_INPUT     0x00U
@@ -102,15 +120,15 @@ static void delay_ms(volatile uint32_t ms) {
  * ═══════════════════════════════════════════════════ */
 int main(void) {
     /* --- Enable GPIOA clock --- */
-    RCC_AHBENR |= RCC_AHBENR_IOPAEN;
+    *RCC_AHBENR |= RCC_AHBENR_IOPAEN;
 
     /* --- Configure PA5 as output (LED on Nucleo board) --- */
-    GPIO_MODER(GPIOA_BASE) &= ~(0x3U << (5 * 2));  /* Clear mode bits */
-    GPIO_MODER(GPIOA_BASE) |=  (GPIO_MODE_OUTPUT << (5 * 2));
+    *GPIOA_MODER &= ~(0x3U << (5 * 2));  /* Clear mode bits */
+    *GPIOA_MODER |=  (GPIO_MODE_OUTPUT << (5 * 2));
 
     /* --- Main loop: blink LED --- */
     while (1) {
-        GPIO_ODR(GPIOA_BASE) ^= (1U << 5);  /* Toggle PA5 */
+        *GPIOA_ODR ^= (1U << 5);  /* Toggle PA5 */
         delay_ms(500);
     }
 
