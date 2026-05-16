@@ -324,22 +324,13 @@ class FieldForgeOrchestrator:
         title = "FIELDFORGE — FIRMWARE GENERATED ✓" if result.success else "FIELDFORGE — PIPELINE COMPLETE"
         style = "bold green" if result.success else "bold yellow"
 
-        try:
-            self.console.print()
-            self.console.print(Panel(content, title=f"[{style}]{title}[/{style}]", border_style="bright_blue"))
-        except BlockingIOError:
-            # Fallback: strip Rich markup tags so [bold] never appears as raw text
-            import re as _re
-            clean = _re.sub(r'\[/?[a-z_ ]+\]', '', content)
-            sys.stderr.write(f"\n{'='*60}\n{title}\n{clean}\n{'='*60}\n")
+        self.console.print()
+        self.console.print(Panel(content, title=f"[{style}]{title}[/{style}]", border_style="bright_blue"))
 
         # Score table
         if result.efficiency_score and result.resource_metrics:
-            try:
-                self.console.print()
-                self.console.print(self.scorer.to_table(result.efficiency_score, result.resource_metrics))
-            except BlockingIOError:
-                pass
+            self.console.print()
+            self.console.print(self.scorer.to_table(result.efficiency_score, result.resource_metrics))
 
     def _print_error(self, message: str):
         """Print an error message."""
