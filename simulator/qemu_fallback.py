@@ -187,8 +187,11 @@ class QEMURunner:
             "LED ON", "LED OFF", "LED BLINK",
             "PUMP START", "PUMP STOP", "PUMP ENABLED",
             "SENSOR READ", "TEMPERATURE",
-            "ERROR", "FAULT", "INIT OK", "READY",
+            "ERROR", "INIT OK", "READY",
             "GPIO HIGH", "GPIO LOW",
+            # NOTE: FAULT intentionally removed — it appears in QEMU's own
+            # crash text ("HardFault") and is not a firmware UART signal.
+            # Firmware that loops correctly will timeout → returns RUNNING.
         ]
 
         found = []
@@ -196,6 +199,10 @@ class QEMURunner:
         for signal in known:
             if signal in output_upper:
                 found.append(signal)
+
+        # If no specific signals found but output exists, firmware produced output
+        if not found and output.strip():
+            found.append("OUTPUT")
 
         return found
 

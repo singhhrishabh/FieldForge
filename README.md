@@ -143,40 +143,45 @@ Screenshot your WiFi-off notification for the submission.
 
 ```
 FIELDFORGE v1.0 │ Powered by Gemma 4 via llama.cpp
+  Model: Gemma 4
   Server: ONLINE ✓
   Network: OFFLINE MODE ✓
 
 Step 1/7 — Image preprocessed ✓
-  Components: 5 │ Complexity: moderate │ Size: 1024×768px
+  Components: 1 │ Complexity: simple │ Size: 1024×887px
 Step 2/7 — Firmware generated ✓
-  Generated: 87 lines of C
+  Generated: 134 lines of C
   Tool called: compile_firmware
 Step 3/7 — Compiled successfully ✓
+  Self-healed on attempt 1 ✓
 Step 4/7 — Critic review complete ✓
-  Verdict: FAIL │ Issues: 2 │ Confidence: 92%
-  ┌──────┬──────┬──────────────────────────────────────────┐
-  │ Line │ Sev  │ Description                              │
-  ├──────┼──────┼──────────────────────────────────────────┤
-  │   12 │ CRIT │ GPIO accessed without enabling RCC clock │
-  │   34 │ HIGH │ Missing volatile on register pointer     │
-  └──────┴──────┴──────────────────────────────────────────┘
+  Verdict: FAIL │ Issues: 4 │ Confidence: 95%
+  ┌──────┬──────┬──────────────────────────────────────────────────┐
+  │ Line │ Sev  │ Description                                      │
+  ├──────┼──────┼──────────────────────────────────────────────────┤
+  │   42 │ HIGH │ GPIO clock for GPIOA must be enabled via RCC     │
+  │   70 │ MED  │ Delay_ms uses busy-wait loop without volatile    │
+  │   74 │ HIGH │ Loop counter calculation 'ms * 1000' can overflow│
+  │  133 │ CRIT │ Reset_Handler calls main() with no infinite loop │
+  └──────┴──────┴──────────────────────────────────────────────────┘
   Applied Critic's fixes →
 Step 5/7 — Final build successful ✓
 Step 6/7 — Simulation complete ✓
-  Simulator: qemu │ Runtime: 5023ms │ Signals: RUNNING
+  Simulator: qemu │ Runtime: 34ms │ Signals: RUNNING
 Step 7/7 — Report generated
 
 ╔══════════════════════════════════════════╗
 ║  FIELDFORGE — FIRMWARE GENERATED ✓      ║
-║  Schematic → Firmware in 47.3s          ║
+║  Schematic → Firmware in 125.8s         ║
 ║                                         ║
-║  Bugs caught by Critic: 2              ║
-║  Final verdict: PASS                    ║
+║  Bugs caught by Critic: 4              ║
+║  Critic verdict: FAIL (bugs found/fixed)║
+║  Final compile: PASS ✓                  ║
 ║                                         ║
-║  RESOURCE SCORE: A (88.1/100)          ║
-║  Instructions:  312                     ║
-║  Binary size:   5,104 bytes            ║
-║  Stack depth:   412 bytes              ║
+║  RESOURCE SCORE: A (96.4/100)          ║
+║  Instructions:  79                      ║
+║  Binary size:   180 bytes              ║
+║  Stack depth:   280 bytes              ║
 ║                                         ║
 ║  Output: ./output/firmware_final.elf   ║
 ╚══════════════════════════════════════════╝
