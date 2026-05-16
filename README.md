@@ -11,7 +11,7 @@
 
 **Sketch it. Snap it. Flash it.** — Turn a photo of any hand-drawn circuit schematic into validated, compiled, running ARM firmware. Entirely offline. On a phone. In under 2 minutes.
 
-<!-- Demo GIF will be added after recording: ![Demo](demo/fieldforge_demo.gif) -->
+![Demo](demo/fieldforge_demo.gif)
 
 ![Python 3.9+](https://img.shields.io/badge/Python-3.9+-blue) ![Gemma 4](https://img.shields.io/badge/Gemma_4-E4B-orange) ![llama.cpp](https://img.shields.io/badge/llama.cpp-local-green) ![ARM GCC](https://img.shields.io/badge/ARM-Cortex--M0-red) ![License](https://img.shields.io/badge/License-Apache_2.0-purple)
 
