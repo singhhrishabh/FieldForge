@@ -3,6 +3,7 @@ FieldForge — Central Configuration
 ===================================
 All paths, prompts, and constants for the FieldForge pipeline.
 """
+from __future__ import annotations
 
 import os
 from pathlib import Path
@@ -41,7 +42,21 @@ COMPILE_TIMEOUT = int(os.environ.get("COMPILE_TIMEOUT", "30"))
 # Simulator
 # ─────────────────────────────────────────────
 WOKWI_PATH = os.environ.get("WOKWI_PATH", "wokwi-cli")
-QEMU_PATH = os.environ.get("QEMU_PATH", "qemu-system-arm")
+
+def _find_qemu():
+    """Auto-discover qemu-system-arm in PATH or common Homebrew locations."""
+    import shutil
+    env_path = os.environ.get("QEMU_PATH")
+    if env_path:
+        return env_path
+    if shutil.which("qemu-system-arm"):
+        return "qemu-system-arm"
+    for candidate in ["/opt/homebrew/bin/qemu-system-arm", "/usr/local/bin/qemu-system-arm"]:
+        if os.path.isfile(candidate):
+            return candidate
+    return "qemu-system-arm"  # fallback
+
+QEMU_PATH = _find_qemu()
 SIMULATOR_TIMEOUT = int(os.environ.get("SIMULATOR_TIMEOUT", "30"))
 
 # ─────────────────────────────────────────────

@@ -4,6 +4,7 @@ FieldForge — CLI Interface
 Command-line interface for running the full pipeline.
 Usage: python -m ui.cli [COMMAND]
 """
+from __future__ import annotations
 
 import sys
 import os
@@ -133,7 +134,7 @@ def check():
         all_ok = False
 
     # QEMU
-    qemu = shutil.which(QEMU_PATH)
+    qemu = shutil.which(QEMU_PATH) or (QEMU_PATH if os.path.isfile(QEMU_PATH) else None)
     if qemu:
         table.add_row("QEMU ARM", "[green]✓ OK[/green]", qemu)
     else:

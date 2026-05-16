@@ -4,6 +4,7 @@ FieldForge — Image Processor
 Preprocesses phone photos of hand-drawn circuit schematics for Gemma 4.
 Handles: low-light, blur, tilt, shadows, crumpled paper.
 """
+from __future__ import annotations
 
 import base64
 import io

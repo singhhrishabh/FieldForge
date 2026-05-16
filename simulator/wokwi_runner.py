@@ -4,6 +4,7 @@ FieldForge — Wokwi Simulator (Optional)
 Wokwi CLI integration for hardware simulation.
 Requires a Wokwi license token. Falls back to QEMU if unavailable.
 """
+from __future__ import annotations
 
 import json
 import logging
