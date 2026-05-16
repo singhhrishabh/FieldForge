@@ -324,7 +324,12 @@ class FieldForgeOrchestrator:
         style = "bold green" if result.success else "bold yellow"
 
         self.console.print()
-        self.console.print(Panel(content, title=f"[{style}]{title}[/{style}]", border_style="bright_blue"))
+        try:
+            self.console.print(Panel(content, title=f"[{style}]{title}[/{style}]", border_style="bright_blue"))
+        except BlockingIOError:
+            # Fallback for piped/recorded output where Rich buffer overflows
+            import sys
+            sys.stderr.write(f"\n{title}\n{content}\n")
 
         # Score table
         if result.efficiency_score and result.resource_metrics:
