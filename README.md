@@ -141,46 +141,49 @@ Screenshot your WiFi-off notification for the submission.
 ## Sample Output
 
 ```
-SKETCHSILICON v1.0 │ Powered by Gemma 4 via llama.cpp
+   _____ __        __       __   _____ _ ___
+  / ___// /_____  / /______/ /_ / ___/(_) (_)________  ____
+  \__ \/ //_/ _ \/ __/ ___/ __ \\__ \/ / / / ___/ __ \/ __ \
+ ___/ / ,< /  __/ /_/ /__/ / / /__/ / / / / /__/ /_/ / / / /
+/____/_/|_|\___/\__/\___/_/ /_/____/_/_/_/\___/\____/_/ /_/
+
+v1.0 │ Powered by Gemma 4 via llama.cpp
+  Model: Gemma 4
   Server: ONLINE ✓
   Network: OFFLINE MODE ✓
 
-Step 1/7 — Image preprocessed ✓
-  Components: 1 │ Complexity: simple │ Size: 1024×887px
-Step 2/7 — Firmware generated ✓
-  Generated: 124 lines of C
+  Components: 5 │ Complexity: moderate │ Size: 1024×1024px
+  Generated: 100 lines of C
   Tool called: compile_firmware
-Step 3/7 — Self-healed on attempt 1 ✓
-Step 4/7 — Critic review complete ✓
-  Verdict: FAIL │ Issues: 10 │ Confidence: 100%
-  ┌──────┬──────┬────────────────────────────────────────────┐
-  │ Line │ Sev  │ Description                                │
-  ├──────┼──────┼────────────────────────────────────────────┤
-  │   15 │ CRIT │ RCC_AHBENR uses reg() — returns volatile*  │
-  │   48 │ CRIT │ Read-modify-write on GPIOA_MODER uses macr │
-  └──────┴──────┴────────────────────────────────────────────┘
-  Applied Critic's fixes →
-Step 5/7 — Final build successful ✓
-Step 6/7 — Simulation complete ✓
-  Simulator: qemu │ Runtime: 36ms │ Signals: OUTPUT ✓
-Step 7/7 — Report generated
+  Compilation failed: 1 errors
+  Self-healed on attempt 1 ✓
+  Critic review failed: Cannot parse Critic response as JSON. Raw: ```json
+{
+    "verdict": "fail",
+    "issues": [
+        {
+            "line": 39,
+            "category": "A5",
+            "severity": "critical",
+            "description": "The register access *RC...
+  Simulator: qemu │ Runtime: 124ms │ Signals: OUTPUT
 
-══════════ SKETCHSILICON — FIRMWARE GENERATED ✓ ══════════
+══════════════════════════════════════════════════════════════════════ SKETCHSILICON — FIRMWARE GENERATED ✓ ═══
 
-  Schematic → Firmware in 179.6s
+  Schematic → Firmware in 134.2s
 
-  Bugs caught by Critic:  10
-  Critic verdict:         FAIL (bugs found and fixed)
+  Bugs caught by Critic:  0
+  Critic verdict:         UNKNOWN (bugs found and fixed)
   Final compile:          PASS ✓
 
-  RESOURCE SCORE:  A (96.5/100)
-  Instructions:    74
-  Binary size:     176 bytes
+  RESOURCE SCORE:  A (96.7/100)
+  Instructions:    59
+  Binary size:     144 bytes
   Stack depth:     272 bytes
 
   Output: ./output/led_blinkfirmware.c
 
-═══════════════════════════════════════════════════════
+═════════════════════════════════════════════════════════════════════════
 ```
 
 ## Project Structure

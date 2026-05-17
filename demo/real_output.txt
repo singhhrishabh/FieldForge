@@ -1,0 +1,58 @@
+
+   _____ __        __       __   _____ _ ___
+  / ___// /_____  / /______/ /_ / ___/(_) (_)________  ____
+  \__ \/ //_/ _ \/ __/ ___/ __ \\__ \/ / / / ___/ __ \/ __ \
+ ___/ / ,< /  __/ /_/ /__/ / / /__/ / / / / /__/ /_/ / / / /
+/____/_/|_|\___/\__/\___/_/ /_/____/_/_/_/\___/\____/_/ /_/
+
+v1.0 │ Powered by Gemma 4 via llama.cpp
+  Model: Gemma 4
+  Server: ONLINE ✓
+  Network: OFFLINE MODE ✓
+
+  Components: 5 │ Complexity: moderate │ Size: 1024×1024px
+  Generated: 100 lines of C
+  Tool called: compile_firmware
+WARNING:compiler.gcc_wrapper:Compilation failed: 1 errors
+  Compilation failed: 1 errors
+  Self-healed on attempt 1 ✓
+WARNING:agents.critic:Failed to parse Critic response: Cannot parse Critic response as JSON. Raw: ```json
+{
+    "verdict": "fail",
+    "issues": [
+        {
+            "line": 39,
+            "category": "A5",
+            "severity": "critical",
+            "description": "The register access *RC.... Retrying...
+  Critic review failed: Cannot parse Critic response as JSON. Raw: ```json
+{
+    "verdict": "fail",
+    "issues": [
+        {
+            "line": 39,
+            "category": "A5",
+            "severity": "critical",
+            "description": "The register access *RC...
+  Simulator: qemu │ Runtime: 124ms │ Signals: OUTPUT
+⠧ Step 7/7 — Generating report... 0:02:14
+
+
+══════════════════════════════════════════════════════════════════════ SKETCHSILICON — FIRMWARE GENERATED ✓ ═══
+
+  Schematic → Firmware in 134.2s
+
+  Bugs caught by Critic:  0
+  Critic verdict:         UNKNOWN (bugs found and fixed)
+  Final compile:          PASS ✓
+
+  RESOURCE SCORE:  A (96.7/100)
+  Instructions:    59
+  Binary size:     144 bytes
+  Stack depth:     272 bytes
+
+  Output: ./output/led_blinkfirmware.c
+
+═════════════════════════════════════════════════════════════════════════
+
+[32mPipeline completed successfully![0m
