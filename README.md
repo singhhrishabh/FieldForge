@@ -18,9 +18,13 @@
 
 ## The Story
 
-It's 3 AM in a flood-damaged hospital. The water pump that keeps the dialysis unit running has failed — its control board is fried. The field engineer knows exactly what circuit she needs. She sketches it on the back of a patient chart. But there's no laptop, no internet, no IDE. Just a phone in her pocket.
+SketchSilicon was built to democratize hardware engineering across three distinct worlds, functioning entirely offline:
 
-**SketchSilicon turns that sketch into working firmware in under 2 minutes — completely offline.**
+1. **Disaster Response (The Edge):** It's 3 AM in a flood-damaged hospital. A water pump's control board is fried. A field engineer sketches a replacement circuit on a patient chart. With no laptop or internet, she uses her phone to generate and flash the life-saving firmware.
+2. **Education (Digital Equity):** A classroom in a low-bandwidth region lacks the internet infrastructure to download massive 5GB vendor IDEs. Students draw circuits on paper, take a photo, and immediately learn how C code maps to their physical hardware designs.
+3. **The Maker Garage (Rapid Prototyping):** A hobbyist is struck by inspiration at a workbench. Instead of breaking flow to write boilerplate C code and configure complex MCU clock trees, they snap a photo of their napkin sketch and jump straight to testing.
+
+**SketchSilicon turns those physical sketches into validated, compiled firmware — running locally.**
 
 ## Quick Start
 
