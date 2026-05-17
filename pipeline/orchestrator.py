@@ -113,6 +113,7 @@ class SketchSiliconOrchestrator:
         start_time = time.time()
         result = PipelineResult(image_path=image_path)
         current_code = ""
+        image_stem = Path(image_path).stem
 
         self.print_banner()
 
@@ -231,7 +232,8 @@ class SketchSiliconOrchestrator:
 
             # ── STEP 5: Final Compilation ─────────────────────
             progress.update(task, description="[cyan]Step 5/7 — Compiling validated firmware...")
-            final_compile = self.gcc.compile(current_code, optimization="s", filename="firmware_final")
+            final_filename = f"{image_stem}firmware"
+            final_compile = self.gcc.compile(current_code, optimization="s", filename=final_filename)
 
             if final_compile.success and final_compile.metrics:
                 progress.update(task, description="[green]Step 5/7 — Final build successful ✓")
@@ -268,19 +270,22 @@ class SketchSiliconOrchestrator:
             result.total_time_seconds = round(time.time() - start_time, 1)
             result.success = final_compile.success
             result.steps_completed.append("report")
+        # Clean up all intermediate and compiled files, leaving only the final .c file
+        output_dir = Path("output")
+        if output_dir.exists():
+            for file in output_dir.iterdir():
+                if file.is_file() and file.name != f"{image_stem}firmware.c":
+                    try:
+                        file.unlink()
+                    except Exception:
+                        pass
 
         # Print final report outside progress context
-        self.print_final_report(result)
-
-        # Save source code
-        if result.final_code:
-            out = Path("output") / "firmware.c"
-            out.parent.mkdir(exist_ok=True)
-            out.write_text(result.final_code)
+        self.print_final_report(result, final_filename=f"{image_stem}firmware.c")
 
         return result
 
-    def print_final_report(self, result):
+    def print_final_report(self, result, final_filename="firmware.c"):
         """Print final report safely using /dev/tty to avoid BlockingIOError."""
         import os
 
@@ -305,7 +310,7 @@ class SketchSiliconOrchestrator:
             lines.append(f"  Binary size:     {result.resource_metrics.binary_size_bytes} bytes")
             lines.append(f"  Stack depth:     {result.resource_metrics.estimated_stack_bytes} bytes")
         lines.append("")
-        lines.append(f"  Output: {result.compile_result.elf_path if result.compile_result and result.compile_result.elf_path else './output/firmware_final.elf'}")
+        lines.append(f"  Output: ./output/{final_filename}")
         lines.append("")
         lines.append("═" * 73)
         lines.append("")

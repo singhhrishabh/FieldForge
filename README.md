@@ -178,7 +178,7 @@ Step 7/7 — Report generated
   Binary size:     176 bytes
   Stack depth:     272 bytes
 
-  Output: ./output/firmware_final.elf
+  Output: ./output/led_blinkfirmware.c
 
 ═══════════════════════════════════════════════════════
 ```
